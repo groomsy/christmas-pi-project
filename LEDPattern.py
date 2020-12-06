@@ -18,9 +18,8 @@ gpio8 = 24
 gpio9 = 21
 gpio10 = 19
 gpio11 = 23
-gpio12 = 32
 
-pinList = [gpio4, gpio5, gpio6, gpio7, gpio8, gpio9, gpio10, gpio11, gpio12]
+pinList = [gpio4, gpio5, gpio6, gpio7, gpio8, gpio9, gpio10, gpio11]
 
 for gpioPin in pinList:
     GPIO.setup(gpioPin, GPIO.OUT)
