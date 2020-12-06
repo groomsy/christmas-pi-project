@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+#
+# This script is taken from the CanaKit manual that accompanied my Pi.
+#
+
 import RPi.GPIO as GPIO
 import time
 
