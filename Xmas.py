@@ -4,78 +4,106 @@
 # Command Line usage:
 #   Xmas.py <input sequence> <audio file>
 #
+from typing import List
 
-import RPi.GPIO as GPIO, time, sys, time, pygame, random
+import RPi.GPIO as GPIO
+import pygame
+import sys
+import time
 
-pin_map = {
-    1:
+
+def convert_seconds_to_ms(seconds):
+    return int(round(seconds * 1000))
+
+
+#
+# GPIO Map
+#
+gpio04 = 7
+gpio05 = 29
+gpio06 = 31
+gpio07 = 26
+gpio08 = 24
+gpio09 = 21
+gpio10 = 19
+gpio11 = 23
+
+#
+# Section-to-Pin Map
+# Sections 1-5 will be light banding (1 at top of tree, 5 at bottom)
+# Section 6 will be Red lights
+# Section 7 will be Green lights
+# Section 8 will be Blue lights
+#
+sectionToPinMap = {
+    1: gpio04,
+    2: gpio05,
+    3: gpio06,
+    4: gpio07,
+    5: gpio08,
+    6: gpio09,
+    7: gpio10,
+    8: gpio11
 }
 
-# Defines the mapping of logical mapping to physical mapping
-# 1 - 5 are lights from top to bottom on tree
-# 6 = RED
-# 7 = GREEN
-# 8 = BLUE
-logical_map = [0 for i in range(9)]
-
-# Defines the mapping of the GPIO1-8 to the pin on the Pi
-pin_map = [0, 11, 12, 8, 15, 16, 18, 22, 7]
-
+#
 # Setup the board
+#
 GPIO.setmode(GPIO.BOARD)
-for i in range(1, 9):
-    GPIO.setup(pin_map[i], GPIO.OUT)
+for section, gpioPin in sectionToPinMap.items():
+    print(f'Setting up {gpioPin} for {section}.')
+    GPIO.setup(gpioPin, GPIO.OUT)
+    GPIO.output(gpioPin, False)
+
+print(f'Let system settle.')
 time.sleep(2.0)
-dev = "/dev/spidev0.0"
-spidev = file(dev, "wb")
 
-# Open the setup config file and parse it to determine
-# how GPIO1-8 are mapped to logical 1-8
-with open("setup.txt", 'r') as f:
-    data = f.readlines()
-    for i in range(8):
-        logical_map[i + 1] = int(data[i])
+#
+# Load sequence file
+#
+sequenceFile = sys.argv[1]
+print(f'Open sequence file ({sequenceFile}) and parse.')
+with open(sequenceFile, 'r') as f:
+    sequenceData: List[str] = f.readlines()
+    for i in range(len(sequenceData)):
+        sequenceData[i] = sequenceData[i].rstrip()
 
-# Open the input sequnce file and read/parse it
-with open(sys.argv[1], 'r') as f:
-    seq_data = f.readlines()
-    for i in range(len(seq_data)):
-        seq_data[i] = seq_data[i].rstrip()
-
-# Current light states
-lights = [False for i in range(8)]
-
+#
 # Load and play the music
+#
+musicFile = sys.argv[2]
+print(f'Starting playback of {musicFile}.')
 pygame.mixer.init()
-pygame.mixer.music.load(sys.argv[2])
+pygame.mixer.music.load(musicFile)
 pygame.mixer.music.play()
 
 # Start sequencing
-start_time = int(round(time.time() * 1000))
-step = 1  # ignore the header line
+startTime = convert_seconds_to_ms(time.time())
+step = 1  # Ignore the header line
 while True:
-    next_step = seq_data[step].split(",")
-    next_step[1] = next_step[1].rstrip()
-    cur_time = int(round(time.time() * 1000)) - start_time
+    nextStep = sequenceData[step].split(",")
+    nextStep[1] = nextStep[1].rstrip()
+    currentTime = convert_seconds_to_ms(time.time()) - startTime
 
-    # time to run the command
-    if int(next_step[0]) <= cur_time:
+    nextStepTimeInMS = nextStep[0]
+    if int(nextStepTimeInMS) <= currentTime:
+        print(f'Running next step.')
 
-        print
-        next_step
+        command: str = nextStep[1].rstrip()
+        if "1" <= command <= "8":
+            # If command is 1-8, then we'll update the section with the specified state.
+            state = False
+            if nextStep[2] == "1":
+                state = True
 
-        # if the command is Relay 1-8
-        if next_step[1] >= "1" and next_step[1] <= "8":
-
-            # change the pin state
-            if next_step[2] == "1":
-                GPIO.output(pin_map[logical_map[int(next_step[1])]], True)
-            else:
-                GPIO.output(pin_map[logical_map[int(next_step[1])]], False)
+            print(f'Update section {command} to {state}.')
+            section = int(command)
+            GPIO.output(sectionToPinMap[section], state)
 
         # if the END command
-        if next_step[1].rstrip() == "END":
-            for i in range(1, 9):
-                GPIO.output(pin_map[logical_map[i]], False)
+        if command == "END":
+            print(f'Reached END; set all pins to False.')
+            for section, gpioPin in sectionToPinMap.items():
+                GPIO.output(gpioPin, False)
             break
         step += 1
