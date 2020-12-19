@@ -4,6 +4,10 @@
 # Command Line usage:
 #   Xmas.py <input sequence> <audio file>
 #
+# This script is based on the script provided in the following instructable:
+# https://www.instructables.com/Raspberry-Pi-Christmas-Tree-Light-Show/
+#
+
 from typing import List
 
 import RPi.GPIO as GPIO
