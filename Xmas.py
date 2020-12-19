@@ -23,7 +23,7 @@ def convert_seconds_to_ms(seconds):
 #
 # GPIO Map
 #
-gpio04 = 7
+gpio17 = 11
 gpio05 = 29
 gpio06 = 31
 gpio07 = 26
@@ -40,7 +40,7 @@ gpio11 = 23
 # Section 8 will be Blue lights
 #
 sectionToPinMap = {
-    1: gpio04,
+    1: gpio17,
     2: gpio05,
     3: gpio06,
     4: gpio07,
