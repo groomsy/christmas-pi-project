@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import RPi.GPIO as GPIO, time
+import RPi.GPIO as GPIO
+import sys
 
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
@@ -16,6 +17,11 @@ gpio11 = 23
 
 pinList = [gpio17, gpio05, gpio06, gpio07, gpio08, gpio09, gpio10, gpio11]
 
+state = False
+directive = sys.argv[1]
+if directive.lower() == "on":
+    state = True
+
 for gpioPin in pinList:
     GPIO.setup(gpioPin, GPIO.OUT)
-    GPIO.output(gpioPin, True)
+    GPIO.output(gpioPin, state)
