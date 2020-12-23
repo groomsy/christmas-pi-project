@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+#
+# Command Line usage:
+#   XmasStatic.py "on/off"
+#
+
 import RPi.GPIO as GPIO
 import sys
 
